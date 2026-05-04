@@ -115,7 +115,6 @@ def extract_layers(graph, initializers):
         elif node.op_type == "Gemm" or node.op_type == "MatMul":
             w = initializers[node.input[1]]
             transB = get_attribute(node, "transB", 0)
-            print(f"Gemm transB={transB}, weight shape={w.shape}")
             layer.update({
                 "type": LAYER_LINEAR,
                 "in_features": w.shape[1] if len(w.shape) > 1 else w.shape[0],
@@ -150,11 +149,19 @@ def extract_layers(graph, initializers):
     return layers, bytes(weight_data)
 
 def infer_dimensions(layers, input_shape):
-    """Calculates the spatial dimensions of the tensors passing through the network."""
-    # PyTorch ONNX strictly exports as NCHW: (Batch, Channels, Height, Width)
-    curr_c = input_shape[1]
-    curr_h = input_shape[2]
-    curr_w = input_shape[3]
+    """Calculates the spatial dimensions of the tensors passing through the network.
+    Supports both 4D NCHW inputs (conv models) and 2D flat inputs (dense-only models).
+    """
+    if len(input_shape) == 4:
+        # NCHW: conv/pool model
+        curr_c = input_shape[1]
+        curr_h = input_shape[2]
+        curr_w = input_shape[3]
+    else:
+        # Flat input: dense-only model (N, features)
+        curr_c = input_shape[1]
+        curr_h = 1
+        curr_w = 1
 
     for layer in layers:
         layer["in_channels"] = curr_c
@@ -191,12 +198,7 @@ def create_blob(layers, weight_data):
       uint32_t weight_offset, bias_offset                                      -> 8 bytes
       Total: 22 bytes packed, NO padding.
     """
-    for i, l in enumerate(layers):
-        print(f"Layer {i:2d} {l['op_type']:10s} in_c={l['in_channels']:4d} out_c={l['out_channels']:4d} "
-            f"in_h={l['in_height']:4d} in_w={l['in_width']:4d} "
-            f"out_h={l['out_height']:4d} out_w={l['out_width']:4d} "
-            f"w_off={l.get('weight_offset','N/A')} b_off={l.get('bias_offset','N/A')}")
-    
+
     header = struct.pack("<II", MAGIC, len(layers))
     meta_table = bytearray()
 
