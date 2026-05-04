@@ -213,22 +213,11 @@ Constraints to be aware of: `Conv2d` must use `stride=1`, `MaxPool2d` must use `
 
 ---
 
-### Step 3 — `validate_model_x86.py` — Run inference on the host to get a reference output
+### Step 3 — Deploy and run on the Pico
 
-Before deploying to the Pico, use this script to run inference on your desktop using `onnxruntime`. It generates a fixed random input (seeded at 42 for reproducibility), saves it as `test_input.bin`, runs the ONNX model, and prints the output logits and predicted class.
+No separate validation script is needed. The `generate_model_sm.py` and `generate_model_dense.py` scripts already handle validation inline — after exporting `model.onnx` they automatically generate a fixed random input (seeded at 42), save it as `test_input.bin`, run ONNX inference via `onnxruntime`, and print the output logits and predicted class.
 
-```bash
-python3 validate_model_x86.py
-# Reads:  model.onnx
-# Output: test_input.bin  (the raw float32 input to copy to the Pico)
-# Prints: output logits + argmax (predicted class)
-```
-
-The purpose is to give you a ground truth to compare against. When you run the same `test_input.bin` through `cnn_helper` on the Pico, the output logits should match to several decimal places. If they don't, the discrepancy is usually a weight layout issue in the blob conversion.
-
----
-
-### Step 4 — Deploy and run on the Pico
+Note the argmax printed at the end of the generate script — this is your ground truth to compare against the Pico output.
 
 Copy `model.bin` and `test_input.bin` to the `CIRCUITPY` drive, then run:
 
@@ -248,4 +237,4 @@ print("Output:", out)
 cnn_helper.unload_model()
 ```
 
-Compare the printed output values against what `validate_model_x86.py` produced. The argmax (predicted class index) should be identical.
+The argmax of the Pico output should be identical to what the generate script printed. If the logit values differ slightly that is normal due to float32 rounding; if the argmax differs, there is likely a weight layout issue in the blob conversion.
