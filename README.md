@@ -193,6 +193,8 @@ python3 generate_model_sm.py
 
 Supported layer types are: `Conv2d`, `MaxPool2d`, `ReLU`, `Flatten`, `Linear`. Anything outside this set will cause `onnx_to_blob.py` to abort with a `CRITICAL: Unsupported ONNX node` error.
 
+Models must use NCHW format (channels first). Export from PyTorch using opset_version=11.
+
 ---
 
 ### Step 2 — `onnx_to_blob.py` — Convert ONNX to Pico binary format
