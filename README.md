@@ -242,10 +242,19 @@ cnn_helper.unload_model()
 The argmax of the Pico output should be identical to what the generate script printed. If the logit values differ slightly that is normal due to float32 rounding; if the argmax differs, there is likely a weight layout issue in the blob conversion.
 
 
-### ATtribution
+### Attribution
 
-## MNIST Dataset
+#### MNIST Dataset
 
 This project uses the **MNIST database of handwritten digits**, created by Yann LeCun, Corinna Cortes, and Christopher J.C. Burges.
 
 - Original source: http://yann.lecun.com/exdb/mnist/
+
+- @article{lecun2010mnist,
+  title={MNIST handwritten digit database},
+  author={LeCun, Yann and Cortes, Corinna and Burges, CJ},
+  journal={ATT Labs [Online]},
+  volume={2},
+  year={2010},
+  url={http://yann.lecun.com/exdb/mnist}
+}
