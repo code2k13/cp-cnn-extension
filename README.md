@@ -186,7 +186,7 @@ This script defines and exports a small CNN in PyTorch ONNX format. The architec
 The key design constraint is that the model must use **NCHW format** (channels first). This script exports cleanly in that format with no extra Transpose nodes, which matters because `onnx_to_blob.py` does not support Transpose ops.
 
 ```bash
-cd ~/extensions/cnn_helper/tools
+cd ~/extensions/cnn_helper/examples
 python3 generate_model_sm.py
 # Output: model.onnx
 ```
@@ -204,6 +204,9 @@ This script reads `model.onnx`, extracts all weights and layer metadata, and pac
 The blob format is: a 4-byte magic header, followed by a fixed 64-byte metadata record per layer, followed by raw float32 weight and bias data. Offsets into the weight block are embedded in each layer's metadata so the C engine can index weights directly without parsing.
 
 ```bash
+cd ~/extensions/cnn_helper/tools
+cp ../examples/model.onnx .
+cp ../examples/test_input.bin .
 python3 onnx_to_blob.py
 # Reads:  model.onnx
 # Output: model.bin
@@ -217,11 +220,11 @@ Constraints to be aware of: `Conv2d` must use `stride=1`, `MaxPool2d` must use `
 
 ### Step 3 — Deploy and run on the Pico
 
-No separate validation script is needed. The `generate_model_sm.py` and `generate_model_dense.py` scripts already handle validation inline — after exporting `model.onnx` they automatically generate a fixed random input (seeded at 42), save it as `test_input.bin`, run ONNX inference via `onnxruntime`, and print the output logits and predicted class.
+No separate validation script is needed. The `./examples/generate_model_sm.py` and `./examples/generate_model_dense.py` scripts already handle validation inline — after exporting `model.onnx` they automatically generate a fixed random input (seeded at 42), save it as `test_input.bin`, run ONNX inference via `onnxruntime`, and print the output logits and predicted class.
 
 Note the argmax printed at the end of the generate script — this is your ground truth to compare against the Pico output.
 
-Copy `model.bin` and `test_input.bin` to the `CIRCUITPY` drive, then run:
+Copy `./tools/model.bin` and `./tools/test_input.bin` to the `CIRCUITPY` drive, then run:
 
 ```python
 import array
